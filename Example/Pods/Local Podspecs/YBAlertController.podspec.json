@@ -1,6 +1,6 @@
 {
   "name": "YBAlertController",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "summary": "A Swift library to provide a animated action sheet and alert",
   "homepage": "https://github.com/yabuzaki/YBAlertController",
   "license": "MIT",
@@ -8,8 +8,8 @@
     "Yabuzaki": "yuta.yabu12@gmail.com"
   },
   "source": {
-    "git": "https://github.com/yabuzakiYBAlertController.git",
-    "tag": "0.1.0"
+    "git": "https://github.com/yabuzaki/YBAlertController.git",
+    "tag": "0.1.1"
   },
   "platforms": {
     "ios": "8.0"

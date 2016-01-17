@@ -1,5 +1,5 @@
 PODS:
-  - YBAlertController (0.1.0)
+  - YBAlertController (0.1.1)
 
 DEPENDENCIES:
   - YBAlertController (from `../`)
@@ -9,6 +9,6 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  YBAlertController: 1e4645062577d65735d08d2598a7defadb036f54
+  YBAlertController: 5dea28cd4db12373cdd113b171e3623921db6348
 
 COCOAPODS: 0.39.0
