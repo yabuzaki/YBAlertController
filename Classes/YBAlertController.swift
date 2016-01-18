@@ -18,7 +18,7 @@ public enum YBButtonActionType {
 }
 
 public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
-
+    
     let ybTag = 2345
     
     // background
@@ -60,7 +60,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
     override public func viewDidLoad() {
         super.viewDidLoad()
     }
-
+    
     override public func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -93,23 +93,16 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         self.message = message
     }
     
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+    }
+    
     func changedOrientation(notification: NSNotification) {
         if showing && style == YBAlertControllerStyle.ActionSheet {
             let value = currentOrientation?.rawValue
             UIDevice.currentDevice().setValue(value, forKey: "orientation")
             return
         }
-        
-        view.frame = UIScreen.mainScreen().bounds
-        let viewWidth:CGFloat = style == .ActionSheet ? view.frame.width : view.frame.width * 0.9
-        containerView.frame = CGRect(x: (view.frame.width - viewWidth)/2, y: view.frame.height/2 - containerView.frame.height/2, width: viewWidth, height: containerView.frame.height)
-        containerView.layoutSubviews()
-        for button in buttons {
-            button.frame = CGRect(x: 0, y: button.frame.origin.y, width: viewWidth, height: buttonHeight)
-        }
-        let f = CGSizeMake(viewWidth-20, CGFloat.max)
-        let rect = messageLabel.sizeThatFits(f)
-        messageLabel.frame = CGRect(x: 10, y:messageLabel.frame.origin.y, width: rect.width, height: rect.height)
     }
     
     public func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldReceiveTouch touch: UITouch) -> Bool {
@@ -117,7 +110,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         if touch.view != gestureRecognizer.view { return false }
         return true
     }
-
+    
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -224,7 +217,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         
         showing = true
         instance = self
-        let viewWidth:CGFloat = style == .ActionSheet ? view.frame.width : view.frame.width * 0.9
+        let viewWidth = (style == .ActionSheet) ? view.frame.width : view.frame.width * 0.9
         
         currentOrientation = UIDevice.currentDevice().orientation
         let orientation = UIApplication.sharedApplication().statusBarOrientation
@@ -252,17 +245,25 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         }
         
         if let message = message where message != "" {
-            let paddingY:CGFloat = 10
+            let paddingY:CGFloat = 8
+            let paddingX:CGFloat = 10
             messageLabel.font = messageFont
             messageLabel.textColor = UIColor.grayColor()
-           // messageLabel.autoresizingMask = [.FlexibleRightMargin, .FlexibleLeftMargin]
+            messageLabel.translatesAutoresizingMaskIntoConstraints = false
             messageLabel.text = message
             messageLabel.numberOfLines = 0
             messageLabel.textColor = messageTextColor
-            let f = CGSizeMake(viewWidth-20, CGFloat.max)
+            let f = CGSizeMake(viewWidth - paddingX*2, CGFloat.max)
             let rect = messageLabel.sizeThatFits(f)
-            messageLabel.frame = CGRect(x: 10, y: posY + paddingY, width: rect.width, height: rect.height)
+            messageLabel.frame = CGRect(x: paddingX, y: posY + paddingY, width: rect.width, height: rect.height)
             containerView.addSubview(messageLabel)
+            containerView.addConstraints([
+                NSLayoutConstraint(item: messageLabel, attribute: .RightMargin, relatedBy: NSLayoutRelation.Equal, toItem: containerView, attribute: .RightMargin, multiplier: 1, constant: -paddingX),
+                NSLayoutConstraint(item: messageLabel, attribute: .LeftMargin, relatedBy: .Equal, toItem: containerView, attribute: .LeftMargin, multiplier: 1.0, constant: paddingX),
+                NSLayoutConstraint(item: messageLabel, attribute: .Top, relatedBy: .Equal, toItem: containerView, attribute: .Top, multiplier: 1.0, constant: posY + paddingY),
+                NSLayoutConstraint(item: messageLabel, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .Height, multiplier: 1.0, constant: rect.height)
+            ])
+            
             posY = messageLabel.frame.maxY + paddingY
             
             let line = UIView(frame: CGRect(x: 0, y: posY, width: viewWidth, height: 1))
@@ -280,7 +281,15 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
             buttons[i].frame = CGRect(x: 0, y: posY, width: viewWidth, height: buttonHeight)
             buttons[i].textLabel.textColor = buttonTextColor
             buttons[i].buttonFont = buttonFont
+            buttons[i].translatesAutoresizingMaskIntoConstraints = false
             containerView.addSubview(buttons[i])
+            
+            containerView.addConstraints([
+                NSLayoutConstraint(item: buttons[i], attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .Height, multiplier: 1.0, constant: buttonHeight),
+                NSLayoutConstraint(item: buttons[i], attribute: NSLayoutAttribute.RightMargin, relatedBy: NSLayoutRelation.Equal, toItem: containerView, attribute: NSLayoutAttribute.RightMargin, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: buttons[i], attribute: NSLayoutAttribute.LeftMargin, relatedBy: NSLayoutRelation.Equal, toItem: containerView, attribute: NSLayoutAttribute.LeftMargin, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: buttons[i], attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: containerView, attribute: NSLayoutAttribute.Top, multiplier: 1.0, constant: posY)
+            ])
             posY += buttons[i].frame.height
         }
         
@@ -295,9 +304,28 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
             posY += cancelButton.frame.height
         }
         
+        containerView.translatesAutoresizingMaskIntoConstraints = false
         containerView.frame = CGRect(x: (view.frame.width - viewWidth) / 2, y:view.frame.height , width: viewWidth, height: posY)
         containerView.backgroundColor = UIColor.whiteColor()
         view.addSubview(containerView)
+        
+        
+        
+        if style == YBAlertControllerStyle.ActionSheet {
+            self.view.addConstraints([
+                NSLayoutConstraint(item: containerView, attribute: NSLayoutAttribute.Width, relatedBy: .Equal, toItem: self.view, attribute: .Width, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: containerView, attribute: NSLayoutAttribute.CenterX, relatedBy: .Equal, toItem: self.view, attribute: NSLayoutAttribute.CenterX, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: containerView, attribute: NSLayoutAttribute.Bottom, relatedBy: .Equal, toItem: self.view, attribute: NSLayoutAttribute.Bottom, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: containerView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .Height, multiplier: 1.0, constant: posY)
+            ])
+        } else {
+            self.view.addConstraints([
+                NSLayoutConstraint(item: containerView, attribute: NSLayoutAttribute.Width, relatedBy: .Equal, toItem: self.view, attribute: .Width, multiplier: 0.9, constant: 0),
+                NSLayoutConstraint(item: containerView, attribute: NSLayoutAttribute.CenterX, relatedBy: .Equal, toItem: self.view, attribute: NSLayoutAttribute.CenterX, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: containerView, attribute: NSLayoutAttribute.CenterY, relatedBy: .Equal, toItem: self.view, attribute: NSLayoutAttribute.CenterY, multiplier: 1.0, constant: 0),
+                NSLayoutConstraint(item: containerView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .Height, multiplier: 1.0, constant: posY)
+            ])
+        }
         
         if let window = UIApplication.sharedApplication().keyWindow {
             if window.viewWithTag(ybTag) == nil {
@@ -305,7 +333,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
                 window.addSubview(view)
             }
         }
-    
+        
         currentStatusBarStyle = UIApplication.sharedApplication().statusBarStyle
         if style == .ActionSheet { UIApplication.sharedApplication().statusBarStyle = .LightContent }
         
@@ -340,7 +368,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         cancelButton.hidden = false
         UIView.animateWithDuration(0.2, delay: 0.2 * Double(buttons.count + 1) - 0.1, usingSpringWithDamping: 0.7, initialSpringVelocity: 0, options: .CurveEaseIn, animations: {
             self.cancelButton.titleLabel?.transform = CGAffineTransformMakeScale(1.0, 1.0)
-        }, completion: nil)
+            }, completion: nil)
     }
     
     public func addButton(icon:UIImage?, title:String, action:()->Void) {
@@ -444,7 +472,6 @@ public class YBButton : UIButton {
         dotView.transform = CGAffineTransformMakeScale(0, 0)
         dotView.hidden = false
         UIView.animateWithDuration(0.2, animations: {
-            //self.iconImageView.transform = CGAffineTransformMakeScale(1.0, 1.0)
             self.textLabel.transform = CGAffineTransformMakeScale(1.0, 1.0)
         })
         
