@@ -357,7 +357,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
     
     private func startButtonAppearAnimation() {
         for i in 0..<buttons.count {
-            let delay = 0.2 * Double(NSEC_PER_SEC)
+            let delay = 0.2
             let delayTime = DispatchTime.now() + (delay * Double(i))
                         DispatchQueue.main.asyncAfter(deadline: delayTime, execute: {
                          self.buttons[i].appear()
