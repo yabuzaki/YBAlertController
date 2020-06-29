@@ -75,12 +75,12 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         containerView.backgroundColor = UIColor.white
         containerView.clipsToBounds = true
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: Selector(("dismiss")))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector((dismissView)))
         tapGesture.numberOfTapsRequired = 1
         tapGesture.delegate = self
         self.view.addGestureRecognizer(tapGesture)
         
-        NotificationCenter.default.addObserver(self, selector: Selector(("changedOrientation:")), name: UIDevice.orientationDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector((changedOrientation)), name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
     public convenience init(style: YBAlertControllerStyle) {
@@ -99,7 +99,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         NotificationCenter.default.removeObserver(self)
     }
     
-    func changedOrientation(notification: NSNotification) {
+    @objc func changedOrientation(notification: NSNotification) {
         if showing && style == YBAlertControllerStyle.ActionSheet {
             let value = currentOrientation?.rawValue
             UIDevice.current.setValue(value, forKey: "orientation")
@@ -133,7 +133,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
                 options: .curveEaseIn,
                 animations: {
                     self.containerView.frame.origin.y = self.view.frame.height - self.containerView.frame.height
-                    self.getTopViewController()?.view.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+                   // self.getTopViewController()?.view.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
                 },
                 completion: { (finished) in
                     if self.animated {
@@ -171,34 +171,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
     
-    public func dismiss() {
-        showing = false
-        if let statusBarStyle = currentStatusBarStyle {
-            UIApplication.shared.statusBarStyle = statusBarStyle
-        }
-        
-        if style == .ActionSheet {
-            UIView.animate(withDuration: 0.2,
-                animations: {
-                    self.containerView.frame.origin.y = self.view.frame.height
-                    self.view.backgroundColor = UIColor(white: 0, alpha: 0)
-                    self.getTopViewController()?.view.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
-                },
-                completion:  { (finished) in
-                    self.view.removeFromSuperview()
-            })
-        } else {
-            UIView.animate(withDuration: 0.2,
-                animations: {
-                    self.view.backgroundColor = UIColor(white: 0, alpha: 0)
-                    self.containerView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-                    self.containerView.alpha = 0
-                },
-                completion:  { (finished) in
-                    self.view.removeFromSuperview()
-            })
-        }
-    }
+
     
     private func getTopViewController() -> UIViewController? {
         var topVC = UIApplication.shared.keyWindow?.rootViewController
@@ -301,7 +274,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
             cancelButton.titleLabel?.font = cancelButtonFont
             cancelButton.setTitle(cancelButtonTitle, for: .normal)
             cancelButton.setTitleColor(cancelButtonTextColor, for: .normal)
-            cancelButton.addTarget(self, action: Selector(("dismiss")), for: .touchUpInside)
+            cancelButton.addTarget(self, action: #selector((self.dismissView)), for: .touchUpInside)
             containerView.addSubview(cancelButton)
             posY += cancelButton.frame.height
         }
@@ -310,7 +283,6 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         containerView.frame = CGRect(x: (view.frame.width - viewWidth) / 2, y:view.frame.height , width: viewWidth, height: posY)
         containerView.backgroundColor = UIColor.white
         view.addSubview(containerView)
-        
         
         
         if style == YBAlertControllerStyle.ActionSheet {
@@ -365,6 +337,41 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
     
+    @objc public func dismissView() {
+         showing = false
+         if let statusBarStyle = currentStatusBarStyle {
+             UIApplication.shared.statusBarStyle = statusBarStyle
+         }
+         
+         if style == .ActionSheet {
+             UIView.animate(withDuration: 0.2,
+                 animations: {
+                     self.containerView.frame.origin.y = self.view.frame.height
+                     self.view.backgroundColor = UIColor(white: 0, alpha: 0)
+                     self.getTopViewController()?.view.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+                 },
+                 completion:  { (finished) in
+                     self.view.removeFromSuperview()
+             })
+         } else {
+             UIView.animate(withDuration: 0.2,
+                 animations: {
+                     self.view.backgroundColor = UIColor(white: 0, alpha: 0)
+                     self.containerView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+                     self.containerView.alpha = 0
+                 },
+                 completion:  { (finished) in
+                     self.view.removeFromSuperview()
+             })
+         }
+     }
+    
+    
+    
+    
+    
+    
+    
     private func startCancelButtonAppearAnimation() {
         cancelButton.titleLabel?.transform = CGAffineTransform(scaleX: 0, y: 0)
         cancelButton.isHidden = false
@@ -379,7 +386,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         button.action = action
         button.buttonColor = buttonIconColor
         button.buttonFont = buttonFont
-        button.addTarget(self, action: Selector(("buttonTapped:")), for: .touchUpInside)
+        button.addTarget(self, action: #selector((self.buttonTapped(button:))), for: .touchUpInside)
         buttons.append(button)
     }
     
@@ -390,7 +397,7 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         button.target = target
         button.selector = selector
         button.buttonFont = buttonFont
-        button.addTarget(self, action: Selector(("buttonTapped:")), for: .touchUpInside)
+        button.addTarget(self, action: #selector((self.buttonTapped(button:))), for: .touchUpInside)
         buttons.append(button)
     }
     
@@ -402,14 +409,14 @@ public class YBAlertController: UIViewController, UIGestureRecognizerDelegate {
         addButton(icon: nil, title: title, target: target, selector: selector)
     }
     
-    func buttonTapped(button:YBButton) {
+   @objc func buttonTapped(button:YBButton) {
         if button.actionType == YBButtonActionType.Closure {
             button.action()
         } else if button.actionType == YBButtonActionType.Selector {
             let control = UIControl()
             control.sendAction(button.selector, to: button.target, for: nil)
         }
-        dismiss()
+        dismissView()
     }
 }
 
@@ -492,7 +499,7 @@ public class YBButton : UIButton {
     }
     
     override public func draw(_ rect: CGRect) {
-        UIColor(white: 0.85, alpha: 1.0).setStroke()
+        UIColor(white: 0.85, alpha: 0.7).setStroke()
         let line = UIBezierPath()
         line.lineWidth = 1
         line.move(to: CGPoint(x: iconImageView.frame.maxX + 5, y: frame.height))
